@@ -35,7 +35,7 @@ export default function DownloadButton({ document: renderedDocument }: DownloadB
       type="button"
       onClick={handleDownload}
       disabled={isGenerating}
-      className="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-60"
+      className="rounded-md bg-[#753991] px-4 py-2 text-sm font-medium text-white hover:bg-[#5f2e75] disabled:cursor-not-allowed disabled:opacity-60"
     >
       {isGenerating ? "Generating PDF..." : "Download PDF"}
     </button>

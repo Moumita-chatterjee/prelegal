@@ -6,7 +6,7 @@ from fastapi.staticfiles import StaticFiles
 
 from app.config import settings
 from app.db import reset_db
-from app.routers import auth, documents
+from app.routers import auth, documents, saved_documents
 
 
 @asynccontextmanager
@@ -27,6 +27,7 @@ app.add_middleware(
 
 app.include_router(auth.router)
 app.include_router(documents.router)
+app.include_router(saved_documents.router)
 
 
 @app.get("/api/health")

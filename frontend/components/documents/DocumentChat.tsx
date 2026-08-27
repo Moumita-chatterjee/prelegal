@@ -9,14 +9,20 @@ const INITIAL_MESSAGE: ChatMessage = {
   content: "Hi! What kind of legal document can I help you put together today?",
 };
 
-interface DocumentChatProps {
+export interface DocumentChatTurn {
   documentType: string | null;
-  onDocumentTypeResolved: (documentType: string) => void;
-  onFieldsUpdate: (fields: DocumentFieldValues) => void;
+  fields: DocumentFieldValues | null;
+  messages: ChatMessage[];
 }
 
-export default function DocumentChat({ documentType, onDocumentTypeResolved, onFieldsUpdate }: DocumentChatProps) {
-  const [messages, setMessages] = useState<ChatMessage[]>([INITIAL_MESSAGE]);
+interface DocumentChatProps {
+  documentType: string | null;
+  initialMessages?: ChatMessage[];
+  onTurnComplete: (turn: DocumentChatTurn) => void;
+}
+
+export default function DocumentChat({ documentType, initialMessages, onTurnComplete }: DocumentChatProps) {
+  const [messages, setMessages] = useState<ChatMessage[]>(initialMessages ?? [INITIAL_MESSAGE]);
   const [input, setInput] = useState("");
   const [isSending, setIsSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -33,13 +39,9 @@ export default function DocumentChat({ documentType, onDocumentTypeResolved, onF
     setIsSending(true);
     try {
       const response = await sendDocumentChatMessage(nextMessages, documentType);
-      setMessages([...nextMessages, { role: "assistant", content: response.reply }]);
-      if (response.documentType && response.documentType !== documentType) {
-        onDocumentTypeResolved(response.documentType);
-      }
-      if (response.fields) {
-        onFieldsUpdate(response.fields);
-      }
+      const withReply = [...nextMessages, { role: "assistant" as const, content: response.reply }];
+      setMessages(withReply);
+      onTurnComplete({ documentType: response.documentType, fields: response.fields, messages: withReply });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
     } finally {
@@ -49,7 +51,7 @@ export default function DocumentChat({ documentType, onDocumentTypeResolved, onF
 
   return (
     <div className="flex h-[70vh] flex-col rounded-lg border border-slate-200 bg-white">
-      <div className="flex-1 space-y-3 overflow-y-auto p-4">
+      <div className="flex-1 space-y-3 overflow-y-auto p-4" aria-live="polite" role="log">
         {messages.map((message, index) => (
           <div key={index} className={message.role === "user" ? "text-right" : "text-left"}>
             <span
