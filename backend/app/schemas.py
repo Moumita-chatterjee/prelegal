@@ -27,37 +27,17 @@ class Token(BaseModel):
     token_type: str = "bearer"
 
 
-class NdaChatMessage(BaseModel):
+class ChatMessage(BaseModel):
     role: Literal["user", "assistant"]
     content: str = Field(min_length=1, max_length=4000)
 
 
-class NdaChatRequest(BaseModel):
-    messages: list[NdaChatMessage] = Field(min_length=1, max_length=60)
+class DocumentChatRequest(BaseModel):
+    messages: list[ChatMessage] = Field(min_length=1, max_length=60)
+    documentType: str | None = None
 
 
-class PartyFieldsUpdate(BaseModel):
-    printName: str | None = None
-    title: str | None = None
-    company: str | None = None
-    noticeAddress: str | None = None
-    date: str | None = None
-
-
-class NdaFieldsUpdate(BaseModel):
-    purpose: str | None = None
-    effectiveDate: str | None = None
-    mndaTerm: Literal["fixed", "open"] | None = None
-    mndaTermYears: int | None = None
-    termOfConfidentiality: Literal["fixed", "open"] | None = None
-    termOfConfidentialityYears: int | None = None
-    governingLaw: str | None = None
-    jurisdiction: str | None = None
-    modifications: str | None = None
-    partyOne: PartyFieldsUpdate | None = None
-    partyTwo: PartyFieldsUpdate | None = None
-
-
-class NdaChatResponse(BaseModel):
+class DocumentChatResponse(BaseModel):
     reply: str
-    fields: NdaFieldsUpdate
+    documentType: str | None
+    fields: dict | None

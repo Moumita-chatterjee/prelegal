@@ -4,8 +4,8 @@ import { AuthProvider } from "@/lib/auth/AuthContext";
 import AuthNav from "@/components/layout/AuthNav";
 
 export const metadata: Metadata = {
-  title: "Mutual NDA Creator",
-  description: "Create and download a completed Mutual Non-Disclosure Agreement.",
+  title: "Prelegal Document Creator",
+  description: "Chat with an AI assistant to draft and download a completed legal agreement.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

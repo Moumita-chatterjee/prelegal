@@ -1,19 +1,21 @@
 "use client";
 
 import { FormEvent, useState } from "react";
-import { ChatMessage, NdaFieldsUpdate, sendNdaChatMessage } from "@/lib/nda/chat";
+import { sendDocumentChatMessage } from "@/lib/documents/chat";
+import { ChatMessage, DocumentFieldValues } from "@/lib/documents/types";
 
 const INITIAL_MESSAGE: ChatMessage = {
   role: "assistant",
-  content:
-    "Hi! I'll help you put together your Mutual NDA. Let's start with the basics — what's the purpose of this agreement, and who are the two parties involved?",
+  content: "Hi! What kind of legal document can I help you put together today?",
 };
 
-interface NdaChatProps {
-  onFieldsUpdate: (fields: NdaFieldsUpdate) => void;
+interface DocumentChatProps {
+  documentType: string | null;
+  onDocumentTypeResolved: (documentType: string) => void;
+  onFieldsUpdate: (fields: DocumentFieldValues) => void;
 }
 
-export default function NdaChat({ onFieldsUpdate }: NdaChatProps) {
+export default function DocumentChat({ documentType, onDocumentTypeResolved, onFieldsUpdate }: DocumentChatProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([INITIAL_MESSAGE]);
   const [input, setInput] = useState("");
   const [isSending, setIsSending] = useState(false);
@@ -30,9 +32,14 @@ export default function NdaChat({ onFieldsUpdate }: NdaChatProps) {
     setError(null);
     setIsSending(true);
     try {
-      const response = await sendNdaChatMessage(nextMessages);
+      const response = await sendDocumentChatMessage(nextMessages, documentType);
       setMessages([...nextMessages, { role: "assistant", content: response.reply }]);
-      onFieldsUpdate(response.fields);
+      if (response.documentType && response.documentType !== documentType) {
+        onDocumentTypeResolved(response.documentType);
+      }
+      if (response.fields) {
+        onFieldsUpdate(response.fields);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
     } finally {
