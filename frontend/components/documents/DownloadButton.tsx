@@ -2,25 +2,25 @@
 
 import { useState } from "react";
 import { pdf } from "@react-pdf/renderer";
-import { NdaFormData } from "@/lib/nda/types";
-import NdaPdfDocument from "./NdaPdfDocument";
+import { RenderedDocument } from "@/lib/documents/render";
+import DocumentPdfDocument from "./DocumentPdfDocument";
 
 interface DownloadButtonProps {
-  data: NdaFormData;
+  document: RenderedDocument;
 }
 
-export default function DownloadButton({ data }: DownloadButtonProps) {
+export default function DownloadButton({ document: renderedDocument }: DownloadButtonProps) {
   const [isGenerating, setIsGenerating] = useState(false);
 
   const handleDownload = async () => {
     setIsGenerating(true);
     try {
-      const blob = await pdf(<NdaPdfDocument data={data} />).toBlob();
+      const blob = await pdf(<DocumentPdfDocument document={renderedDocument} />).toBlob();
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
-      const companySlug = (data.partyOne.company || "mutual-nda").replace(/[^a-z0-9]+/gi, "-");
+      const nameSlug = renderedDocument.title.replace(/[^a-z0-9]+/gi, "-").toLowerCase();
       link.href = url;
-      link.download = `${companySlug}-mutual-nda.pdf`;
+      link.download = `${nameSlug}.pdf`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);

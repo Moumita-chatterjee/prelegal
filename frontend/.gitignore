@@ -17,6 +17,9 @@
 /.next/
 /out/
 
+# generated at build time by scripts/generate-templates.mjs (predev/prebuild)
+/lib/documents/generated.ts
+
 # production
 /build
 
