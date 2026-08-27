@@ -1,9 +1,7 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, ReactNode } from "react";
-import { AuthUser, fetchCurrentUser } from "./api";
-
-const TOKEN_STORAGE_KEY = "prelegal_token";
+import { AuthUser, clearStoredToken, fetchCurrentUser, getStoredToken, storeToken } from "./api";
 
 interface AuthContextValue {
   user: AuthUser | null;
@@ -22,14 +20,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       setUser(await fetchCurrentUser(token));
     } catch {
-      localStorage.removeItem(TOKEN_STORAGE_KEY);
+      clearStoredToken();
       setUser(null);
     }
   }, []);
 
   useEffect(() => {
     async function bootstrap() {
-      const token = localStorage.getItem(TOKEN_STORAGE_KEY);
+      const token = getStoredToken();
       if (token) {
         await loadUser(token);
       }
@@ -41,14 +39,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signIn = useCallback(
     async (token: string) => {
-      localStorage.setItem(TOKEN_STORAGE_KEY, token);
+      storeToken(token);
       await loadUser(token);
     },
     [loadUser],
   );
 
   const signOut = useCallback(() => {
-    localStorage.removeItem(TOKEN_STORAGE_KEY);
+    clearStoredToken();
     setUser(null);
   }, []);
 
