@@ -1,4 +1,6 @@
 import json
+import re
+from datetime import date
 
 import litellm
 
@@ -16,11 +18,22 @@ MAX_REPLY_CHARS = 1000
 _DOCUMENT_PROMPT_TEMPLATE = """You are a friendly assistant helping a user fill out a Common Paper {doc_name} \
 through natural conversation, a couple of related questions at a time rather than one huge list.
 
+Today's date is {today}.
+
 Gather the following, asking about whatever is still missing:
 {field_instructions}
 
 {prompt_notes}Do NOT ask about signatures or a party's signing date — those are collected separately \
 outside this chat, after the rest of the fields are filled in.
+
+Formatting rules for every field you extract, since these values are inserted directly into a formal legal \
+document exactly as you write them:
+- Any date field must be a resolved absolute date in ISO format (YYYY-MM-DD), never a relative phrase — \
+resolve "today", "tomorrow", "next Monday", "in 30 days", etc. against today's date above rather than \
+storing the phrase itself.
+- Write proper nouns, place names, and the start of sentences with standard capitalization (e.g. "New York", \
+not "new york") regardless of the capitalization the user typed — correct casing as you extract, don't copy \
+it verbatim.
 
 Once every required field above is known, tell the user their document is ready to review and sign below.
 
@@ -118,6 +131,7 @@ def get_document_chat_reply(slug: str, messages: list[ChatMessage]) -> tuple[str
     prompt_notes = f"{doctype.prompt_notes}\n\n" if doctype.prompt_notes else ""
     system_prompt = _DOCUMENT_PROMPT_TEMPLATE.format(
         doc_name=doctype.catalog_names[0],
+        today=date.today().isoformat(),
         field_instructions=build_field_instructions(doctype),
         prompt_notes=prompt_notes,
     )
@@ -127,9 +141,26 @@ def get_document_chat_reply(slug: str, messages: list[ChatMessage]) -> tuple[str
         parsed = _call_structured(system_prompt, schema, f"{slug}_chat_turn", messages)
         model = fields_model_for(slug)
         fields = model.model_validate(parsed["fields"])
-        return parsed["reply"], fields.model_dump()
+        return parsed["reply"], _clear_malformed_dates(doctype, fields.model_dump())
 
     return _retry(_do)
+
+
+_ISO_DATE_PATTERN = re.compile(r"^\d{4}-\d{2}-\d{2}$")
+
+
+def _clear_malformed_dates(doctype, values: dict) -> dict:
+    # Despite the prompt instructing the model to resolve relative dates
+    # ("today", "next Monday") into absolute ISO dates, it occasionally
+    # doesn't. A literal "today" rendered verbatim into a legal document reads
+    # far worse than the field staying unfilled, so null it out rather than
+    # let it through — the model will be asked again on the next turn.
+    for f in doctype.fields:
+        if f.kind == "date" and f.key in values:
+            value = values[f.key]
+            if isinstance(value, str) and not _ISO_DATE_PATTERN.match(value):
+                values[f.key] = None
+    return values
 
 
 def get_classification_reply(messages: list[ChatMessage]) -> tuple[str, str | None]:
