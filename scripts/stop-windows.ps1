@@ -1,6 +1,6 @@
 $ErrorActionPreference = "Stop"
 
-docker stop prelegal 2>$null | Out-Null
-docker rm prelegal 2>$null | Out-Null
+try { docker stop prelegal 2>$null | Out-Null } catch {}
+try { docker rm prelegal 2>$null | Out-Null } catch {}
 
 Write-Host "Prelegal stopped"
