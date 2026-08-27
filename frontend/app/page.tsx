@@ -1,10 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import NdaForm from "@/components/nda/NdaForm";
+import NdaChat from "@/components/nda/NdaChat";
 import NdaPreview from "@/components/nda/NdaPreview";
+import SignatureStep from "@/components/nda/SignatureStep";
 import DownloadButton from "@/components/nda/DownloadButton";
 import RequireAuth from "@/components/auth/RequireAuth";
+import { mergeNdaFields } from "@/lib/nda/chat";
 import { defaultNdaFormData } from "@/lib/nda/types";
 
 export default function Home() {
@@ -18,7 +20,7 @@ export default function Home() {
             <div>
               <h1 className="text-lg font-semibold text-slate-900">Mutual NDA Creator</h1>
               <p className="text-sm text-slate-500">
-                Fill in the details below and download a completed Mutual Non-Disclosure Agreement.
+                Chat with the assistant below and watch your Mutual Non-Disclosure Agreement come together.
               </p>
             </div>
             <DownloadButton data={data} />
@@ -26,8 +28,9 @@ export default function Home() {
         </header>
 
         <main className="mx-auto grid max-w-7xl grid-cols-1 gap-6 px-6 py-6 lg:grid-cols-2">
-          <div className="rounded-lg border border-slate-200 bg-white p-6">
-            <NdaForm data={data} onChange={setData} />
+          <div className="space-y-6">
+            <NdaChat onFieldsUpdate={(fields) => setData((current) => mergeNdaFields(current, fields))} />
+            <SignatureStep data={data} onChange={setData} />
           </div>
           <div className="lg:sticky lg:top-6 lg:self-start lg:max-h-[calc(100vh-3rem)] lg:overflow-y-auto">
             <NdaPreview data={data} />

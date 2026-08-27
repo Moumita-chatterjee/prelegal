@@ -1,4 +1,6 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "";
+import { apiRequest } from "@/lib/apiClient";
+
+const TOKEN_STORAGE_KEY = "prelegal_token";
 
 export interface AuthUser {
   id: number;
@@ -11,43 +13,35 @@ export interface AuthToken {
   token_type: string;
 }
 
-async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
-  const response = await fetch(`${API_BASE_URL}${path}`, {
-    ...options,
-    headers: {
-      "Content-Type": "application/json",
-      ...options.headers,
-    },
-  });
+export function getStoredToken(): string | null {
+  if (typeof window === "undefined") return null;
+  return localStorage.getItem(TOKEN_STORAGE_KEY);
+}
 
-  if (!response.ok) {
-    const body = await response.json().catch(() => null);
-    const detail = body?.detail;
-    const message = Array.isArray(detail)
-      ? detail.map((d: { msg?: string }) => d.msg).filter(Boolean).join(", ")
-      : detail;
-    throw new Error(message || `Request failed with status ${response.status}`);
-  }
+export function storeToken(token: string): void {
+  localStorage.setItem(TOKEN_STORAGE_KEY, token);
+}
 
-  return response.json() as Promise<T>;
+export function clearStoredToken(): void {
+  localStorage.removeItem(TOKEN_STORAGE_KEY);
 }
 
 export function signup(email: string, password: string): Promise<AuthToken> {
-  return request<AuthToken>("/api/auth/signup", {
+  return apiRequest<AuthToken>("/api/auth/signup", {
     method: "POST",
     body: JSON.stringify({ email, password }),
   });
 }
 
 export function signin(email: string, password: string): Promise<AuthToken> {
-  return request<AuthToken>("/api/auth/signin", {
+  return apiRequest<AuthToken>("/api/auth/signin", {
     method: "POST",
     body: JSON.stringify({ email, password }),
   });
 }
 
 export function fetchCurrentUser(token: string): Promise<AuthUser> {
-  return request<AuthUser>("/api/auth/me", {
+  return apiRequest<AuthUser>("/api/auth/me", {
     headers: { Authorization: `Bearer ${token}` },
   });
 }
