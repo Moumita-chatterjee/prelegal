@@ -15,6 +15,9 @@ export default function AuthNav() {
 
         {isLoading ? null : user ? (
           <div className="flex items-center gap-4">
+            <Link href="/my-documents" className="text-slate-200 hover:text-white">
+              My documents
+            </Link>
             <span className="text-slate-200">{user.email}</span>
             <button type="button" onClick={signOut} className="text-slate-200 hover:text-white">
               Sign out

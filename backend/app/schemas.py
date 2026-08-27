@@ -41,3 +41,30 @@ class DocumentChatResponse(BaseModel):
     reply: str
     documentType: str | None
     fields: dict | None
+
+
+class DocumentSaveRequest(BaseModel):
+    documentType: str
+    title: str | None = None
+    messages: list[ChatMessage] = Field(default_factory=list, max_length=60)
+    fields: dict = Field(default_factory=dict)
+
+
+class DocumentSummaryResponse(BaseModel):
+    id: int
+    documentType: str = Field(validation_alias="document_type", serialization_alias="documentType")
+    title: str | None
+    updatedAt: datetime = Field(validation_alias="updated_at", serialization_alias="updatedAt")
+
+    model_config = {"from_attributes": True, "populate_by_name": True}
+
+
+class DocumentResponse(BaseModel):
+    id: int
+    documentType: str = Field(validation_alias="document_type", serialization_alias="documentType")
+    title: str | None
+    messages: list[ChatMessage]
+    fields: dict
+    updatedAt: datetime = Field(validation_alias="updated_at", serialization_alias="updatedAt")
+
+    model_config = {"from_attributes": True, "populate_by_name": True}
